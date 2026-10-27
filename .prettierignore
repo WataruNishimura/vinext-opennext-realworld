@@ -7,3 +7,7 @@ node_modules
 dist
 coverage
 packages/db/migrations/meta
+.cloudflare/
+playwright-report/
+test-results/
+.vinext/

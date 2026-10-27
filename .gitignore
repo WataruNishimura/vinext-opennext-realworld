@@ -14,3 +14,6 @@ coverage/
 playwright-report/
 test-results/
 .claude/settings.local.json
+.cloudflare/
+.vinext/
+next-env.d.ts
