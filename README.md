@@ -228,6 +228,8 @@ export default defineConfig({
 
 vinext implements `'use cache'` (including the `remote` and `private` variants), `cacheLife`, `cacheTag`, `updateTag`, `cookies()` and `next/link`. It does not implement Partial Prefetching render stages yet, so `prefetch()` and `navigation()` resolve immediately there; the reads behind them stay cached. See [`apps/vinext/README.md`](apps/vinext/README.md) for the feature-by-feature results on Workers.
 
+**Not available on vinext as of 2026-10-28** (vinext 1.3.1): the static shell / Partial Prerendering (every cookie-reading page renders per request), Partial Prefetching (links prefetch only a loading shell), the `prefetch()` / `navigation()` gates (no-ops through the export condition), the `ensureStatic` and `instant` segment configs (silently ignored), the `@next/playwright` `instant()` lock, browser-side `'use cache: private'` (per request only), and `<ViewTransition>` around streamed content (SSR error, so the app uses plain `<Suspense>` there).
+
 ## Testing
 
 ```bash
