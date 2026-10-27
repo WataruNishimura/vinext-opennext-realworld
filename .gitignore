@@ -1,0 +1,16 @@
+node_modules/
+.pnpm-store/
+.turbo/
+.next/
+.open-next/
+dist/
+.wrangler/
+.dev.vars
+.env*
+!.env.example
+*.log
+.DS_Store
+coverage/
+playwright-report/
+test-results/
+.claude/settings.local.json
