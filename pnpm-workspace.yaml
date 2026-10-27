@@ -36,6 +36,15 @@ catalog:
   drizzle-kit: ^0.31.11
   miniflare: ^4.20260730.0
   '@cloudflare/workers-types': ^5.20261027.1
+  # OpenNext app
+  '@opennextjs/cloudflare': ^1.20.13
+  # Pinned to the version @opennextjs/cloudflare depends on (lib/remote-cache-handler.ts).
+  '@opennextjs/aws': 4.1.12
+  wrangler: ^4.153.0
+  '@next/playwright': 16.5.0-canary.28
+  '@playwright/test': ^1.64.1
+  '@tailwindcss/postcss': ^4.3.3
+  babel-plugin-react-compiler: ^1.0.0
   # UI
   '@ariakit/react': ^0.4.42
   clsx: ^2.1.1
@@ -73,6 +82,8 @@ minimumReleaseAgeExclude:
   - '@next/swc-win32-arm64-msvc@16.5.0-canary.28'
   - '@next/swc-win32-x64-msvc@16.5.0-canary.28'
   - next@16.5.0-canary.28
+  - '@next/playwright@16.5.0-canary.28'
+  - wrangler@4.153.0
 
 allowBuilds:
   esbuild: true
