@@ -37,6 +37,10 @@
   "durable_objects": {
     "bindings": [{ "name": "NEXT_CACHE_DO_QUEUE", "class_name": "DOQueueHandler" }],
   },
-  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["DOQueueHandler"] }],
+  // Declarative exports (not `migrations`): the Worker was first deployed with them, and the API
+  // refuses to go back to migrations (code 100403).
+  "exports": {
+    "DOQueueHandler": { "type": "durable-object", "storage": "sqlite" },
+  },
   "services": [{ "binding": "WORKER_SELF_REFERENCE", "service": "realworld-opennext" }],
 }
