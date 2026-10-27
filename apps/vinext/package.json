@@ -1,0 +1,50 @@
+{
+  "name": "@realworld/vinext",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "cf dev",
+    "build": "cf build",
+    "preview": "vite preview",
+    "deploy": "cf deploy",
+    "types": "cf workers types",
+    "db:setup:local": "D1_DATABASE_ID=7c6d99ba-4407-484b-8fd8-4fb8dbf07bbc pnpm --filter @realworld/db db:migrate:local --persist-to ../../apps/vinext/.cloudflare/state && D1_DATABASE_ID=7c6d99ba-4407-484b-8fd8-4fb8dbf07bbc pnpm --filter @realworld/db db:seed:local --persist-to ../../apps/vinext/.cloudflare/state",
+    "db:setup:remote": "D1_DATABASE_ID=7c6d99ba-4407-484b-8fd8-4fb8dbf07bbc pnpm --filter @realworld/db db:migrate:remote && D1_DATABASE_ID=7c6d99ba-4407-484b-8fd8-4fb8dbf07bbc pnpm --filter @realworld/db db:seed:remote",
+    "lint": "eslint .",
+    "typecheck": "cf workers types >/dev/null && tsc --noEmit",
+    "test": "vitest run",
+    "test:e2e": "playwright test"
+  },
+  "dependencies": {
+    "@realworld/core": "workspace:*",
+    "@realworld/db": "workspace:*",
+    "@realworld/ui": "workspace:*",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "react-server-dom-webpack": "catalog:",
+    "server-only": "catalog:",
+    "vinext": "catalog:"
+  },
+  "devDependencies": {
+    "@cloudflare/vite-plugin": "catalog:",
+    "@cloudflare/workers-types": "catalog:",
+    "@next/playwright": "catalog:",
+    "@playwright/test": "catalog:",
+    "@tailwindcss/vite": "catalog:",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@vinext/cloudflare": "catalog:",
+    "@vitejs/plugin-react": "catalog:",
+    "@vitejs/plugin-rsc": "catalog:",
+    "cf": "catalog:",
+    "next": "catalog:",
+    "oxc-transform-react": "catalog:",
+    "tailwindcss": "catalog:",
+    "typescript": "catalog:",
+    "typescript-7": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:"
+  }
+}
