@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { signIn } from './fixtures.ts';
+import { clickAndWaitForAction, signIn } from './fixtures.ts';
 
 test('saving a product toggles it on the saved page', async ({ page }) => {
   await signIn(page, '/product/2');
@@ -7,7 +7,7 @@ test('saving a product toggles it on the saved page', async ({ page }) => {
   await expect(save).toBeVisible();
   const wasSaved = (await save.getAttribute('aria-pressed')) === 'true';
 
-  await save.click();
+  await clickAndWaitForAction(page, save);
   await expect(save).toHaveAttribute('aria-pressed', String(!wasSaved));
 
   // `saved:<accountId>` was updated, so the saved page reflects the change.
@@ -16,7 +16,7 @@ test('saving a product toggles it on the saved page', async ({ page }) => {
   await expect(savedLink).toHaveCount(wasSaved ? 0 : 1);
 
   await page.goto('/product/2');
-  await page.getByRole('button', { name: /^Save/ }).click();
+  await clickAndWaitForAction(page, page.getByRole('button', { name: /^Save/ }));
   await expect(page.getByRole('button', { name: /^Save/ })).toHaveAttribute(
     'aria-pressed',
     String(wasSaved),
@@ -27,8 +27,15 @@ test('saving a product toggles it on the saved page', async ({ page }) => {
 
 test('featuring a product invalidates the remote-cached home page selection', async ({ page }) => {
   await signIn(page, '/product/3');
+  // Start unfeatured even if an earlier run stopped halfway.
+  const unfeature = page.getByRole('button', { name: 'Remove from featured' });
   const feature = page.getByRole('button', { name: 'Feature on home page' });
-  await feature.click();
+  await expect(unfeature.or(feature)).toBeVisible();
+  if (await unfeature.isVisible()) {
+    await clickAndWaitForAction(page, unfeature);
+    await expect(feature).toBeVisible();
+  }
+  await clickAndWaitForAction(page, feature);
   await expect(page.getByRole('button', { name: 'Remove from featured' })).toBeVisible();
 
   await page.goto('/');
@@ -39,7 +46,7 @@ test('featuring a product invalidates the remote-cached home page selection', as
   await expect(featured.getByRole('link', { name: 'Studio Microphone' })).toBeVisible();
 
   await page.goto('/product/3');
-  await page.getByRole('button', { name: 'Remove from featured' }).click();
+  await clickAndWaitForAction(page, page.getByRole('button', { name: 'Remove from featured' }));
   await expect(page.getByRole('button', { name: 'Feature on home page' })).toBeVisible();
   await page.goto('/');
   await expect(featured.getByRole('link', { name: 'Studio Microphone' })).toHaveCount(0);
@@ -52,7 +59,7 @@ test('the account page updates the profile and requires sign-in', async ({ page 
   await signIn(page, '/account');
   await expect(page.getByText('Signed in as jane.smith@example.com')).toBeVisible();
   await page.getByLabel('City').fill('Kyoto');
-  await page.getByRole('button', { name: 'Save profile' }).click();
+  await clickAndWaitForAction(page, page.getByRole('button', { name: 'Save profile' }));
   await expect(page.getByText('Profile saved.')).toBeVisible();
   await page.reload();
   await expect(page.getByLabel('City')).toHaveValue('Kyoto');

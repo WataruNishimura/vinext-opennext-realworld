@@ -16,6 +16,8 @@ export default defineConfig({
   forbidOnly: Boolean(process.env['CI']),
   retries: process.env['CI'] ? 2 : 0,
   reporter: process.env['CI'] ? 'github' : 'list',
+  // A deployment adds network latency to every streamed response.
+  expect: { timeout: externalBaseURL === undefined ? 5_000 : 15_000 },
   use: { baseURL, trace: 'retain-on-failure' },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   ...(externalBaseURL === undefined && {

@@ -1,5 +1,5 @@
 import { instant as nextInstant } from '@next/playwright';
-import { test, type Page } from '@playwright/test';
+import { test, type Locator, type Page } from '@playwright/test';
 
 /**
  * `instant()` needs the testing API, which only the e2e build exposes: the local Worker, or that
@@ -43,4 +43,17 @@ export async function signIn(page: Page, redirectTo = '/') {
   await page.getByLabel('Email').fill(DEMO_EMAIL);
   await page.getByRole('button', { name: 'Sign in' }).click();
   await page.waitForURL(redirectTo);
+}
+
+/**
+ * Click a control that calls a Server Function and wait for its response. The UI updates
+ * optimistically, so without this a following navigation can race the mutation.
+ */
+export async function clickAndWaitForAction(page: Page, control: Locator): Promise<void> {
+  const response = page.waitForResponse(
+    res =>
+      res.request().method() === 'POST' && res.request().headers()['next-action'] !== undefined,
+  );
+  await control.click();
+  await response;
 }
