@@ -9,14 +9,12 @@ The product is modeled on [next16-commerce](https://github.com/aurorascharff/nex
 
 The code follows the [Next.js App Architecture](https://github.com/aurorascharff/nextjs-app-architecture-skill) skill: queries in `<domain>-queries.ts` (`server-only`), Server Functions in `<domain>-actions.ts` (`'use server'`), tags in a pure `<domain>-cache.ts`, and components that receive ids and own their skeletons.
 
-> The two apps are not in this branch yet. This branch builds the root tooling and the `packages/*` both apps import.
-
 ## Repository layout
 
 ```
 apps/
   opennext/          Next.js + @opennextjs/cloudflare  (added later)
-  vinext/            vinext                             (added later)
+  vinext/            vinext on Cloudflare Workers
 packages/
   db/                Drizzle schema, migrations, seed, D1 client, Miniflare test database
   core/              Data layer: queries by caching tier, Server Functions, tags, session
@@ -210,17 +208,35 @@ const nextConfig: NextConfig = {
 
 ### vinext (`apps/vinext`)
 
-Add the `vinext` export condition so `@realworld/core/render-stages` resolves to its fallback:
+Add the `vinext` export condition so `@realworld/core/render-stages` resolves to its fallback. Top-level `resolve.conditions` only reaches Vite's client environment, so set it for the server environments too. Also resolve the packages that vinext's `"use cache"` / `"use server"` transforms inject into `packages/*` source from the app:
 
 ```ts
 // vite.config.ts
+import { defaultClientConditions, defaultServerConditions, defineConfig } from 'vite';
+
+const serverResolve = { conditions: ['vinext', ...defaultServerConditions] };
+
 export default defineConfig({
-  resolve: { conditions: ['vinext'] },
+  resolve: {
+    conditions: ['vinext', ...defaultClientConditions],
+    dedupe: ['@vitejs/plugin-rsc', 'react-server-dom-webpack', 'vinext'],
+  },
+  environments: { rsc: { resolve: serverResolve }, ssr: { resolve: serverResolve } },
   // …
 });
 ```
 
-vinext implements `'use cache'` (including the `remote` and `private` variants), `cacheLife`, `cacheTag`, `updateTag`, `cookies()` and `next/link`. It does not implement Partial Prefetching render stages yet, so `prefetch()` and `navigation()` resolve immediately there; the reads behind them stay cached.
+vinext implements `'use cache'` (including the `remote` and `private` variants), `cacheLife`, `cacheTag`, `updateTag`, `cookies()` and `next/link`. It does not implement Partial Prefetching render stages yet, so `prefetch()` and `navigation()` resolve immediately there; the reads behind them stay cached. See [`apps/vinext/README.md`](apps/vinext/README.md) for the feature-by-feature results on Workers.
+
+**2026-10-28 時点で vinext（1.3.1）では使えなかった機能**（詳細は [`apps/vinext/README.md`](apps/vinext/README.md)）:
+
+- 静的シェル / Partial Prerendering: Cookie を読むページは毎リクエスト丸ごと描画される
+- Partial Prefetching: リンクはローディングシェルしか先読みしない
+- `prefetch()` / `navigation()`: export condition で何もしない関数に置き換えている
+- `ensureStatic` と `instant` のセグメント設定: 何も言わずに無視される
+- `@next/playwright` の `instant()`: 遷移を止める仕組みがない
+- ブラウザ側の `'use cache: private'`: リクエスト単位のキャッシュのみ
+- ストリーミング中の内容を包む `<ViewTransition>`: SSR エラーになるため、その箇所は通常の `<Suspense>` を使っている
 
 ## Testing
 
