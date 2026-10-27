@@ -1,0 +1,42 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  // OpenNext Worker. `opennextjs-cloudflare build` writes .open-next/worker.js and .open-next/assets;
+  // `opennextjs-cloudflare deploy` populates the caches and runs `wrangler deploy`.
+  "name": "realworld-opennext",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-10-27",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "upload_source_maps": true,
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS",
+  },
+  "observability": { "enabled": true },
+  "d1_databases": [
+    {
+      // App data, read through @realworld/core (see lib/database.ts).
+      "binding": "DB",
+      "database_name": "realworld-opennext",
+      "database_id": "fd457de7-24ba-4ef7-a42f-6d53815b972e",
+      "migrations_dir": "../../packages/db/migrations",
+    },
+    {
+      // OpenNext tag cache (d1NextTagCache); `populateCache` creates the `revalidations` table.
+      "binding": "NEXT_TAG_CACHE_D1",
+      "database_name": "realworld-opennext",
+      "database_id": "fd457de7-24ba-4ef7-a42f-6d53815b972e",
+    },
+  ],
+  "kv_namespaces": [
+    {
+      // OpenNext incremental cache (kvIncrementalCache); R2 is not enabled on this account.
+      "binding": "NEXT_INC_CACHE_KV",
+      "id": "92ea15265aec4d7097d83f402fa7581f",
+    },
+  ],
+  "durable_objects": {
+    "bindings": [{ "name": "NEXT_CACHE_DO_QUEUE", "class_name": "DOQueueHandler" }],
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["DOQueueHandler"] }],
+  "services": [{ "binding": "WORKER_SELF_REFERENCE", "service": "realworld-opennext" }],
+}

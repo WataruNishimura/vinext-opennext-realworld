@@ -1,0 +1,4 @@
+@import 'tailwindcss';
+@import '@realworld/ui/styles.css';
+
+@source '../node_modules/@realworld/ui/src';

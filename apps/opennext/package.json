@@ -1,0 +1,46 @@
+{
+  "name": "@realworld/opennext",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build --webpack",
+    "build:worker": "opennextjs-cloudflare build && node scripts/patch-worker.ts",
+    "build:e2e": "NEXT_TESTING_API=1 pnpm build:worker",
+    "preview": "pnpm build:worker && opennextjs-cloudflare preview",
+    "deploy": "pnpm build:worker && opennextjs-cloudflare deploy",
+    "e2e:prepare": "pnpm build:e2e && ./scripts/setup-local.sh",
+    "lint": "eslint .",
+    "typecheck": "next typegen && tsc --noEmit",
+    "test": "vitest run",
+    "test:e2e": "playwright test"
+  },
+  "dependencies": {
+    "@opennextjs/aws": "catalog:",
+    "@opennextjs/cloudflare": "catalog:",
+    "@realworld/core": "workspace:*",
+    "@realworld/db": "workspace:*",
+    "@realworld/ui": "workspace:*",
+    "next": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "server-only": "catalog:"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "catalog:",
+    "@next/playwright": "catalog:",
+    "@playwright/test": "catalog:",
+    "@tailwindcss/postcss": "catalog:",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "babel-plugin-react-compiler": "catalog:",
+    "miniflare": "catalog:",
+    "tailwindcss": "catalog:",
+    "typescript": "catalog:",
+    "typescript-7": "catalog:",
+    "vitest": "catalog:",
+    "wrangler": "catalog:"
+  }
+}
