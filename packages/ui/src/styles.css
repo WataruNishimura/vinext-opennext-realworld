@@ -1,0 +1,91 @@
+/*
+ * Shared design tokens and view-transition styles. Apps import Tailwind first, then this file:
+ *
+ *   @import 'tailwindcss';
+ *   @import '@realworld/ui/styles.css';
+ */
+@source './';
+
+:root {
+  color-scheme: light dark;
+
+  --rw-surface-light: oklch(99% 0.003 260);
+  --rw-surface-dark: oklch(18% 0.01 260);
+  --rw-surface-raised-light: oklch(100% 0 0);
+  --rw-surface-raised-dark: oklch(23% 0.012 260);
+  --rw-ink-light: oklch(22% 0.02 260);
+  --rw-ink-dark: oklch(94% 0.01 260);
+  --rw-muted-light: oklch(48% 0.02 260);
+  --rw-muted-dark: oklch(72% 0.015 260);
+  --rw-line-light: oklch(90% 0.008 260);
+  --rw-line-dark: oklch(32% 0.012 260);
+  --rw-accent-light: oklch(50% 0.2 265);
+  --rw-accent-dark: oklch(78% 0.13 250);
+  --rw-on-accent-light: oklch(99% 0 0);
+  --rw-on-accent-dark: oklch(20% 0.05 265);
+
+  accent-color: var(--color-accent);
+}
+
+@theme inline {
+  --color-surface: light-dark(var(--rw-surface-light), var(--rw-surface-dark));
+  --color-surface-raised: light-dark(var(--rw-surface-raised-light), var(--rw-surface-raised-dark));
+  --color-ink: light-dark(var(--rw-ink-light), var(--rw-ink-dark));
+  --color-muted: light-dark(var(--rw-muted-light), var(--rw-muted-dark));
+  --color-line: light-dark(var(--rw-line-light), var(--rw-line-dark));
+  --color-accent: light-dark(var(--rw-accent-light), var(--rw-accent-dark));
+  --color-on-accent: light-dark(var(--rw-on-accent-light), var(--rw-on-accent-dark));
+  --color-success: light-dark(oklch(48% 0.13 150), oklch(78% 0.14 150));
+  --color-warning: light-dark(oklch(52% 0.14 70), oklch(82% 0.14 80));
+  --color-danger: light-dark(oklch(52% 0.19 25), oklch(74% 0.15 25));
+}
+
+@layer base {
+  body {
+    background-color: var(--color-surface);
+    color: var(--color-ink);
+  }
+
+  /* Native modal dialogs: keep scroll gestures from reaching the page behind. */
+  dialog:modal {
+    overscroll-behavior: contain;
+  }
+  dialog::backdrop {
+    overflow: hidden;
+    overscroll-behavior: contain;
+    background-color: oklch(0% 0 0 / 40%);
+  }
+}
+
+/* View transitions used by <AnimatedSuspense> and product cards. */
+::view-transition-old(.slide-down) {
+  animation: rw-fade-out 150ms ease-out both;
+}
+::view-transition-new(.slide-up) {
+  animation: rw-slide-up 250ms ease-out both;
+}
+::view-transition-group(.product-card) {
+  animation-duration: 300ms;
+  animation-timing-function: ease-in-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
+
+@keyframes rw-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes rw-slide-up {
+  from {
+    opacity: 0;
+    translate: 0 0.5rem;
+  }
+}
