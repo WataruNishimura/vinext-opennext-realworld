@@ -1,0 +1,9 @@
+pnpm-lock.yaml
+node_modules
+.turbo
+.next
+.open-next
+.wrangler
+dist
+coverage
+packages/db/migrations/meta

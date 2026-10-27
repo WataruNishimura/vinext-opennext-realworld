@@ -1,0 +1,46 @@
+{
+  "name": "@realworld/db",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts",
+    "./schema": "./src/schema.ts",
+    "./seed": "./src/seed.ts",
+    "./migrations": "./src/migrations.ts",
+    "./testing": "./src/testing.ts"
+  },
+  "scripts": {
+    "db:generate": "drizzle-kit generate",
+    "db:migrate:local": "node scripts/d1.ts migrate",
+    "db:migrate:remote": "node scripts/d1.ts migrate --remote",
+    "db:seed:local": "node scripts/d1.ts seed",
+    "db:seed:remote": "node scripts/d1.ts seed --remote",
+    "db:seed-sql": "node scripts/write-seed-sql.ts",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "drizzle-orm": "catalog:",
+    "@cloudflare/workers-types": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "cf": "catalog:",
+    "drizzle-kit": "catalog:",
+    "miniflare": "catalog:",
+    "typescript": "catalog:",
+    "typescript-7": "catalog:",
+    "vitest": "catalog:"
+  },
+  "peerDependencies": {
+    "miniflare": "*"
+  },
+  "peerDependenciesMeta": {
+    "miniflare": {
+      "optional": true
+    }
+  }
+}
