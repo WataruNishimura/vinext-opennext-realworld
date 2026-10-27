@@ -1,0 +1,43 @@
+{
+  "name": "@realworld/core",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts",
+    "./database": "./src/database.ts",
+    "./render-stages": {
+      "vinext": "./src/framework/render-stages.vinext.ts",
+      "default": "./src/framework/render-stages.ts"
+    },
+    "./category/*": "./src/category/*.ts",
+    "./product/*": "./src/product/*.ts",
+    "./cart/*": "./src/cart/*.ts",
+    "./user/*": "./src/user/*.ts"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@realworld/db": "workspace:*",
+    "drizzle-orm": "catalog:",
+    "server-only": "catalog:",
+    "zod": "catalog:"
+  },
+  "peerDependencies": {
+    "next": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "miniflare": "catalog:",
+    "next": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "typescript": "catalog:",
+    "typescript-7": "catalog:",
+    "vitest": "catalog:"
+  }
+}
