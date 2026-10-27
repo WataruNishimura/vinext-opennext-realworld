@@ -1,8 +1,8 @@
 import { Card } from '@realworld/ui/card';
-import { Link } from '@realworld/ui/link';
 import { StockBadgeSkeleton } from '@realworld/ui/stock-badge';
 import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
+import { BackLink } from '../../../../features/layout/components/back-link.tsx';
 import { AddToCart, AddToCartSkeleton } from '../../../../features/cart/components/add-to-cart.tsx';
 import {
   LiveStock,
@@ -47,9 +47,9 @@ export default function ProductPage({ params }: Props) {
   const productId = productIdFrom(params);
   return (
     <div className="flex flex-col gap-8">
-      <Link href="/all" className="text-muted text-sm hover:underline">
+      <BackLink fallbackHref="/all" className="text-muted self-start text-sm hover:underline">
         ← Back
-      </Link>
+      </BackLink>
       <Card className="flex flex-col gap-6 p-6">
         <Suspense fallback={<ProductOverviewSkeleton />}>
           {productId.then(id => (
