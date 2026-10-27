@@ -92,6 +92,11 @@ pnpm deploy      # build:worker → opennextjs-cloudflare deploy
 
 `pnpm preview` はローカルでビルドして `opennextjs-cloudflare preview`(`wrangler dev`)で配信します。
 
+デプロイ時の注意:
+
+- `wrangler.jsonc` の Durable Object は `migrations` ではなく宣言的な `exports` で書いています。この Worker は最初に `cf` の `exports` 方式でデプロイしたため、`migrations` に戻すデプロイは API に拒否されます(`reverting to migrations is not supported`、code 100403)。
+- `apps/opennext/.cloudflare/`(`cf` のビルド出力)が残っていると、`wrangler deploy` は「`cf` 向けのプロジェクト」と判断して止まります。消してから実行してください。
+
 ## ローカル開発とテスト
 
 ```bash
@@ -107,11 +112,25 @@ PLAYWRIGHT_BASE_URL=http://127.0.0.1:3100 E2E_INSTANT=1 E2E_RUNTIME=node pnpm te
 
 workerd の外(`next build` のプリレンダー、`next dev`、`next start`)には Worker の `env` がありません。そのため `lib/database.ts` は、デプロイ先と同じマイグレーションと決定的なシードを入れたメモリ上の Miniflare D1 を使います。モジュールは実行時に組み立てた指定子で読み込むので、Miniflare が Worker のバンドルに入ることはありません。
 
-e2e はローカルの Worker(workerd)で 10 件すべて成功しています。内訳は、カタログ、商品ページ、カート、保存、注目商品のキャッシュ無効化、アカウント、`/about` への instant ナビゲーションです。
+e2e は 10 件で、カタログ、商品ページ、カート、保存、注目商品のキャッシュ無効化、アカウント、`/about` への instant ナビゲーションを扱います。
+
+- ローカルの Worker(workerd): 10 件すべて成功
+- 本番(`PLAYWRIGHT_BASE_URL=https://realworld-opennext.wataru-chame-gon.workers.dev pnpm test:e2e`): 2 回連続で 10 件すべて成功。本番では testing API がないので `instant()` のロックは外れ、最終的な UI を確認します。
+
+本番で確認した内容:
+
+| 確認                                            | 結果                                                                       |
+| ----------------------------------------------- | -------------------------------------------------------------------------- |
+| `/about`(完全に静的)                            | `x-nextjs-cache: HIT`、`cache-control: s-maxage=31536000`                  |
+| `/`(Partial Prerender)                          | `x-nextjs-prerender: 1`、`x-nextjs-postponed: 1`(静的シェル + resume)      |
+| `'use cache: remote'`(新しい検索条件のカタログ) | 1 回目 0.75 秒 → 2 回目 0.46 秒 → 3 回目 0.24 秒                           |
+| 保存の切り替え(`updateTag('saved:<id>')`)       | 直後の `/saved` に 0.2 秒以内で反映                                        |
+| 注目商品(`updateTag('featured-products')`)      | 直後の `/` に反映(e2e)                                                     |
+| D1 タグキャッシュ                               | `revalidations` に `featured-products`、`cart:<id>` などの行が書かれている |
 
 ## OpenNext で使えなかったこと
 
-確認した組み合わせ: Next.js `16.5.0-canary.28`、`@opennextjs/cloudflare` 1.20.13(`@opennextjs/aws` 4.1.12)、Wrangler 4.153.0。すべてローカルの workerd(`wrangler dev`)で再現しています。比較には同じビルドを `next start`(Node)で動かしました。
+確認した組み合わせ: Next.js `16.5.0-canary.28`、`@opennextjs/cloudflare` 1.20.13(`@opennextjs/aws` 4.1.12)、Wrangler 4.153.0。1〜7 はローカルの workerd(`wrangler dev`)で再現しています。8 は本番で観測しました。比較には同じビルドを `next start`(Node)で動かしました。
 
 ### 1. 静的シェルの実行時再生成
 
@@ -241,6 +260,24 @@ Next.js はモジュール読み込みの追跡用に、プロセスで 1 つの
 - **R2 が使えない**
   - 迂回策: インクリメンタルキャッシュは KV を使います(アカウント設定の問題)。
 
+### 8. Server Function 直後の再描画(本番で観測)
+
+**状態: 断続的に古い表示になる。後続のリクエストで確認することで迂回。**
+
+**現象**
+
+- 本番で、カートの最後の 1 行を削除した Server Function の応答(アクション後の再描画)が、まだ削除前のカートを表示することがありました。
+- その直後のリクエストも古いことがあり、約 1 秒後からは空のカートになります。
+- 3 回試して 1 回起き、1 回は正しく空になり、1 回はプローブ自体が途中で失敗しました。毎回は起きません。
+- `updateTag` のタグは D1 に書き込まれています。OpenNext の composable cache も `updateTags` で書き込みを `await` しています。
+- ローカルの workerd では再現しませんでした。
+- デバッグログに出る `'use cache'` の「cross-request invocation leader」(同じアイソレート内での呼び出しの重複排除)が関係している可能性がありますが、原因は特定していません。
+
+**迂回策**
+
+- e2e では、削除後に再読み込みしながら最終的に空になることを確認します(`expect().toPass()`)。
+- e2e は楽観的更新の表示ではなく、Server Function の応答を待ってから次へ進みます(`clickAndWaitForAction`)。待たないと本番ではアクション完了前に移動してしまいます(これはテスト側の問題でした)。
+
 ### `cf` CLI を使わず Wrangler にした理由
 
 最初は `cf` CLI(`cloudflare.config.ts`)でデプロイしましたが、`cf` では OpenNext を扱えないため Wrangler に切り替えました。
@@ -254,4 +291,4 @@ Next.js はモジュール読み込みの追跡用に、プロセスで 1 つの
 ### その他
 
 - `next build` / `next dev` / workerd で出る `setTimeout()` に関する警告は想定どおりです。
-- `https://realworld-opennext.wataru-chame-gon.workers.dev` は、修正前の Turbopack ビルドを `cf` でデプロイしたもので、全ルートが 500 を返します。修正版の再デプロイには `wrangler login` が必要です。
+- 本番: `https://realworld-opennext.wataru-chame-gon.workers.dev`(Wrangler でデプロイ、Version ID `3cc9331e-634f-43a0-89b2-011025708282`)。
