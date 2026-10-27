@@ -108,12 +108,13 @@ Cart changes check the live stock (uncached) and never invalidate the catalog. F
 
 ### `@realworld/db`
 
-| Export                     | What it is                                                                                 |
-| -------------------------- | ------------------------------------------------------------------------------------------ |
-| `@realworld/db`            | `createDb(binding)`, `schema`, row types, `Database`, `D1Binding`                          |
-| `@realworld/db/seed`       | `buildSeedData()`, `seed(db)`, `seedStatements()`, `DEMO_ACCOUNT_ID`, `DEMO_ACCOUNT_EMAIL` |
-| `@realworld/db/migrations` | `migrationsDir`, `readMigrations()`                                                        |
-| `@realworld/db/testing`    | `createTestDatabase()`: an isolated, migrated D1 database in Miniflare                     |
+| Export                     | What it is                                                                                                                |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `@realworld/db`            | `createDb(binding)`, `schema`, row types, `Database`, `D1Binding`                                                         |
+| `@realworld/db/seed`       | `buildSeedData()`, `seed(db)`, `seedStatements()`, `DEMO_ACCOUNT_ID`, `DEMO_ACCOUNT_EMAIL`                                |
+| `@realworld/db/migrations` | `migrationsDir`, `readMigrations()`                                                                                       |
+| `@realworld/db/d1-http`    | `createD1HttpBinding()`: a `D1Database` over the Cloudflare D1 REST API (no binding needed)                               |
+| `@realworld/db/testing`    | `createTestDatabase()`: an isolated, migrated D1 database in Miniflare, also served over the emulated D1 REST API (`api`) |
 
 Tables: `categories`, `products` (with the `featured` flag), `inventory`, `accounts`, `reviews`, `cart_items` (keyed by an opaque cart id cookie), `saved_products`. Money is stored in cents, timestamps as integer milliseconds. The seed is deterministic (seeded PRNG, fixed timestamps): 7 categories, 28 products (4 featured, some sold out, some low in stock), 2 accounts and generated reviews.
 
@@ -244,6 +245,6 @@ vinext implements `'use cache'` (including the `remote` and `private` variants),
 pnpm test
 ```
 
-- **`@realworld/db`**: migrations apply to a fresh Miniflare D1 database; the seed is deterministic, idempotent, and its SQL form recreates the same data.
+- **`@realworld/db`**: migrations apply to a fresh Miniflare D1 database; the seed is deterministic, idempotent, and its SQL form recreates the same data. The D1 REST adapter runs against the same Miniflare database through an emulated `/raw` endpoint and must return exactly what the Workers binding returns (rows, meta, batches, errors, parameter binding, Drizzle joins).
 - **`@realworld/core`**: every data function runs against a seeded Miniflare D1 database. Queries and Server Functions run with in-memory stand-ins for `next/cache`, `next/headers` and `next/navigation`, and the tests assert each query's tags and lifetime, each query's cache directive (read from source, matching the table above), and the exact tags each Server Function updates.
 - **`@realworld/ui`**: components render under happy-dom with Testing Library.
