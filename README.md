@@ -228,7 +228,15 @@ export default defineConfig({
 
 vinext implements `'use cache'` (including the `remote` and `private` variants), `cacheLife`, `cacheTag`, `updateTag`, `cookies()` and `next/link`. It does not implement Partial Prefetching render stages yet, so `prefetch()` and `navigation()` resolve immediately there; the reads behind them stay cached. See [`apps/vinext/README.md`](apps/vinext/README.md) for the feature-by-feature results on Workers.
 
-**Not available on vinext as of 2026-10-28** (vinext 1.3.1): the static shell / Partial Prerendering (every cookie-reading page renders per request), Partial Prefetching (links prefetch only a loading shell), the `prefetch()` / `navigation()` gates (no-ops through the export condition), the `ensureStatic` and `instant` segment configs (silently ignored), the `@next/playwright` `instant()` lock, browser-side `'use cache: private'` (per request only), and `<ViewTransition>` around streamed content (SSR error, so the app uses plain `<Suspense>` there).
+**2026-10-28 時点で vinext（1.3.1）では使えなかった機能**（詳細は [`apps/vinext/README.md`](apps/vinext/README.md)）:
+
+- 静的シェル / Partial Prerendering: Cookie を読むページは毎リクエスト丸ごと描画される
+- Partial Prefetching: リンクはローディングシェルしか先読みしない
+- `prefetch()` / `navigation()`: export condition で何もしない関数に置き換えている
+- `ensureStatic` と `instant` のセグメント設定: 何も言わずに無視される
+- `@next/playwright` の `instant()`: 遷移を止める仕組みがない
+- ブラウザ側の `'use cache: private'`: リクエスト単位のキャッシュのみ
+- ストリーミング中の内容を包む `<ViewTransition>`: SSR エラーになるため、その箇所は通常の `<Suspense>` を使っている
 
 ## Testing
 
