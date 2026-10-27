@@ -38,3 +38,22 @@ test('about is static content', async ({ page }) => {
   await page.goto('/about');
   await expect(page.getByRole('heading', { name: 'About us' })).toBeVisible();
 });
+
+test('Back returns to the page the product was opened from', async ({ page }) => {
+  // Before hydration Back is a plain link to the catalog, so let the app hydrate first.
+  await page.goto('/', { waitUntil: 'networkidle' });
+  await page.getByRole('link', { exact: true, name: 'Pour-Over Kettle' }).click();
+  await page.waitForURL('/product/17');
+  await expect(page.getByText(/\d+ in stock/)).toBeVisible();
+  await page.getByRole('link', { exact: true, name: '← Back' }).click();
+  await page.waitForURL('/');
+  await expect(page.getByRole('heading', { name: 'Featured products' })).toBeVisible();
+});
+
+test('Back falls back to the catalog when the product page was opened directly', async ({
+  page,
+}) => {
+  await page.goto('/product/17');
+  await page.getByRole('link', { exact: true, name: '← Back' }).click();
+  await page.waitForURL('/all');
+});
