@@ -1,15 +1,31 @@
 'use client';
 
-import { addToCart } from '@realworld/core/cart/cart-actions';
-import { Button } from '@realworld/ui/button';
+import type { ActionError } from '@realworld/core';
 import { useActionState, useOptimistic } from 'react';
+import { Button } from './button.tsx';
+import { Skeleton } from './skeleton.tsx';
 
 type State = { quantity: number; error: string | null };
 
-export function AddToCartButton({ productId, quantity }: { productId: number; quantity: number }) {
+/**
+ * Action-prop add-to-cart: the parent passes the Server Function (`addToCart`). The quantity in
+ * the cart goes up optimistically; a sold-out product that is not in the cart cannot be added.
+ */
+export function AddToCartButton({
+  productId,
+  quantity,
+  soldOut,
+  action,
+}: {
+  productId: number;
+  /** Quantity already in the visitor's cart. */
+  quantity: number;
+  soldOut: boolean;
+  action: (productId: number) => Promise<{ ok: true; quantity: number } | ActionError>;
+}) {
   const [state, add, isPending] = useActionState<State>(
     async previous => {
-      const result = await addToCart(productId);
+      const result = await action(productId);
       return result.ok
         ? { quantity: result.quantity, error: null }
         : { quantity: previous.quantity, error: result.error };
@@ -20,6 +36,14 @@ export function AddToCartButton({ productId, quantity }: { productId: number; qu
     Math.max(state.quantity, quantity),
     (current: number) => current + 1,
   );
+
+  if (soldOut && optimisticQuantity === 0) {
+    return (
+      <Button variant="secondary" disabled>
+        Sold out
+      </Button>
+    );
+  }
 
   return (
     <form
@@ -46,4 +70,8 @@ export function AddToCartButton({ productId, quantity }: { productId: number; qu
       ) : null}
     </form>
   );
+}
+
+export function AddToCartSkeleton() {
+  return <Skeleton className="h-10 w-40" />;
 }

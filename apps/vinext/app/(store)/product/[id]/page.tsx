@@ -1,8 +1,8 @@
-import { Card } from '@realworld/ui/card';
+import { BackLink } from '@realworld/ui/back-link';
+import { ProductPageLayout } from '@realworld/ui/product-page-layout';
 import { StockBadgeSkeleton } from '@realworld/ui/stock-badge';
 import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
-import { BackLink } from '../../../../features/layout/components/back-link.tsx';
 import { AddToCart, AddToCartSkeleton } from '../../../../features/cart/components/add-to-cart.tsx';
 import {
   LiveStock,
@@ -13,9 +13,9 @@ import {
   ProductDetailsSkeleton,
 } from '../../../../features/product/components/product-details.tsx';
 import {
-  ProductOverview,
-  ProductOverviewSkeleton,
-} from '../../../../features/product/components/product-overview.tsx';
+  ProductHeader,
+  ProductHeaderSkeleton,
+} from '../../../../features/product/components/product-header.tsx';
 import { Reviews, ReviewsSkeleton } from '../../../../features/product/components/reviews.tsx';
 import { StockStatus } from '../../../../features/product/components/stock-status.tsx';
 import {
@@ -46,46 +46,61 @@ async function productIdFrom(params: Props['params']): Promise<number> {
 export default function ProductPage({ params }: Props) {
   const productId = productIdFrom(params);
   return (
-    <div className="flex flex-col gap-8">
-      <BackLink fallbackHref="/all" className="text-muted self-start text-sm hover:underline">
-        ← Back
-      </BackLink>
-      <Card className="flex flex-col gap-6 p-6">
-        <Suspense fallback={<ProductOverviewSkeleton />}>
+    <ProductPageLayout
+      back={
+        <BackLink fallbackHref="/all" className="text-muted hover:text-ink text-sm">
+          ← Back
+        </BackLink>
+      }
+      header={
+        <Suspense fallback={<ProductHeaderSkeleton />}>
           {productId.then(id => (
-            <>
-              <ProductOverview productId={id} />
-              <div className="flex flex-wrap items-center gap-4">
-                <Suspense fallback={<StockBadgeSkeleton />}>
-                  <StockStatus productId={id} />
-                </Suspense>
-                <Suspense fallback={<LiveStockSkeleton />}>
-                  <LiveStock productId={id} />
-                </Suspense>
-              </div>
-              <div className="flex flex-wrap items-start gap-4">
-                <Suspense fallback={<AddToCartSkeleton />}>
-                  <AddToCart productId={id} />
-                </Suspense>
-                <Suspense fallback={<SaveProductSkeleton />}>
-                  <SaveProduct productId={id} />
-                </Suspense>
-              </div>
-              <Suspense fallback={<ProductDetailsSkeleton />}>
-                <ProductDetails productId={id} />
-              </Suspense>
-            </>
+            <ProductHeader productId={id} />
           ))}
         </Suspense>
-      </Card>
-      <section className="flex flex-col gap-4">
-        <h2 className="text-xl font-semibold">Customer reviews</h2>
+      }
+      stock={
+        <>
+          <Suspense fallback={<StockBadgeSkeleton />}>
+            {productId.then(id => (
+              <StockStatus productId={id} />
+            ))}
+          </Suspense>
+          <Suspense fallback={<LiveStockSkeleton />}>
+            {productId.then(id => (
+              <LiveStock productId={id} />
+            ))}
+          </Suspense>
+        </>
+      }
+      actions={
+        <>
+          <Suspense fallback={<AddToCartSkeleton />}>
+            {productId.then(id => (
+              <AddToCart productId={id} />
+            ))}
+          </Suspense>
+          <Suspense fallback={<SaveProductSkeleton />}>
+            {productId.then(id => (
+              <SaveProduct productId={id} />
+            ))}
+          </Suspense>
+        </>
+      }
+      details={
+        <Suspense fallback={<ProductDetailsSkeleton />}>
+          {productId.then(id => (
+            <ProductDetails productId={id} />
+          ))}
+        </Suspense>
+      }
+      reviews={
         <Suspense fallback={<ReviewsSkeleton />}>
           {productId.then(id => (
             <Reviews productId={id} />
           ))}
         </Suspense>
-      </section>
-    </div>
+      }
+    />
   );
 }

@@ -35,7 +35,8 @@ test('category, search and pagination keep their state in the URL', async ({ pag
   await expect(page.getByRole('link', { name: 'Wireless Headphones' })).toBeVisible();
 
   await page.getByRole('searchbox', { name: 'Search products' }).fill('speaker');
-  await page.waitForURL(/q=speaker/);
+  await page.getByRole('button', { name: 'Search' }).click();
+  await page.waitForURL('/all?q=speaker&category=audio');
   await expect(page.getByRole('link', { name: 'Portable Speaker' })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Wireless Headphones' })).toHaveCount(0);
 

@@ -19,5 +19,5 @@ export async function UserMenu() {
 }
 
 export function UserMenuSkeleton() {
-  return <Skeleton className="h-8 w-24 rounded-lg" />;
+  return <Skeleton className="h-8 w-20" />;
 }

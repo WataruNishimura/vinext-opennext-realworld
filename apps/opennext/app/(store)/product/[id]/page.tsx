@@ -1,15 +1,21 @@
 import { AnimatedSuspense } from '@realworld/ui/animated-suspense';
-import { Card } from '@realworld/ui/card';
-import { Link } from '@realworld/ui/link';
+import { BackLink } from '@realworld/ui/back-link';
+import { ProductPageLayout } from '@realworld/ui/product-page-layout';
+import { StockBadgeSkeleton } from '@realworld/ui/stock-badge';
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { AddToCart, AddToCartSkeleton } from '../../../../features/cart/add-to-cart.tsx';
 import { FeatureProduct } from '../../../../features/product/feature-product.tsx';
 import { LiveStock, LiveStockSkeleton } from '../../../../features/product/live-stock.tsx';
 import {
+  ProductDetails,
+  ProductDetailsSkeleton,
+} from '../../../../features/product/product-details.tsx';
+import {
   ProductHeader,
   ProductHeaderSkeleton,
 } from '../../../../features/product/product-header.tsx';
+import { ProductStockBadge } from '../../../../features/product/product-stock-badge.tsx';
 import { Reviews, ReviewsSkeleton } from '../../../../features/product/reviews.tsx';
 import { SaveProduct, SaveProductSkeleton } from '../../../../features/user/save-product.tsx';
 
@@ -21,24 +27,35 @@ export const instant = true;
 export default function ProductPage({ params }: { params: Params }) {
   const productId = params.then(({ id }) => Number(id));
   return (
-    <>
-      <Link href="/all" prefetch className="text-muted hover:text-ink text-sm">
-        ← All products
-      </Link>
-      <Card className="flex flex-col gap-6">
+    <ProductPageLayout
+      back={
+        <BackLink fallbackHref="/all" className="text-muted hover:text-ink text-sm">
+          ← Back
+        </BackLink>
+      }
+      header={
         <AnimatedSuspense fallback={<ProductHeaderSkeleton />}>
           {productId.then(id => (
             <ProductHeader productId={id} />
           ))}
         </AnimatedSuspense>
-        <div className="flex flex-wrap items-start gap-4">
+      }
+      stock={
+        <>
+          <Suspense fallback={<StockBadgeSkeleton />}>
+            {productId.then(id => (
+              <ProductStockBadge productId={id} />
+            ))}
+          </Suspense>
           <Suspense fallback={<LiveStockSkeleton />}>
             {productId.then(id => (
               <LiveStock productId={id} />
             ))}
           </Suspense>
-        </div>
-        <div className="flex flex-wrap items-start gap-3">
+        </>
+      }
+      actions={
+        <>
           <Suspense fallback={<AddToCartSkeleton />}>
             {productId.then(id => (
               <AddToCart productId={id} />
@@ -54,18 +71,22 @@ export default function ProductPage({ params }: { params: Params }) {
               <FeatureProduct productId={id} />
             ))}
           </Suspense>
-        </div>
-      </Card>
-      <section aria-labelledby="reviews" className="flex flex-col gap-4">
-        <h2 id="reviews" className="text-xl font-semibold">
-          Customer reviews
-        </h2>
+        </>
+      }
+      details={
+        <AnimatedSuspense fallback={<ProductDetailsSkeleton />}>
+          {productId.then(id => (
+            <ProductDetails productId={id} />
+          ))}
+        </AnimatedSuspense>
+      }
+      reviews={
         <AnimatedSuspense fallback={<ReviewsSkeleton />}>
           {productId.then(id => (
             <Reviews productId={id} />
           ))}
         </AnimatedSuspense>
-      </section>
-    </>
+      }
+    />
   );
 }
