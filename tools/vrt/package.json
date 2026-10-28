@@ -1,0 +1,23 @@
+{
+  "name": "@realworld/vrt",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Cross-app visual regression testing: apps/opennext vs apps/vinext, pixel by pixel.",
+  "scripts": {
+    "vrt": "node src/cli.ts",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@playwright/test": "catalog:",
+    "@types/node": "catalog:",
+    "@types/pngjs": "catalog:",
+    "pixelmatch": "catalog:",
+    "pngjs": "catalog:",
+    "typescript": "catalog:",
+    "typescript-7": "catalog:",
+    "vitest": "catalog:"
+  }
+}
