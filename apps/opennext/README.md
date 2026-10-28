@@ -97,6 +97,28 @@ pnpm deploy      # build:worker → opennextjs-cloudflare deploy
 - `wrangler.jsonc` の Durable Object は `migrations` ではなく宣言的な `exports` で書いています。この Worker は最初に `cf` の `exports` 方式でデプロイしたため、`migrations` に戻すデプロイは API に拒否されます(`reverting to migrations is not supported`、code 100403)。
 - `apps/opennext/.cloudflare/`(`cf` のビルド出力)が残っていると、`wrangler deploy` は「`cf` 向けのプロジェクト」と判断して止まります。消してから実行してください。
 
+## Workers Builds（CD）
+
+`main` への push ごとに、Cloudflare の Workers Builds（Git 連携）で本番へ自動デプロイします。PR のチェックは GitHub Actions、D1 のマイグレーションは手動で、ここには含みません。リポジトリの接続は Cloudflare ダッシュボードで行います(下の設定は未適用です)。
+
+ダッシュボードの Worker `realworld-opennext` > **Settings > Build** に次のとおり設定します。
+
+| 設定                                        | 値                                                                                                                              |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| Git repository                              | `WataruNishimura/vinext-opennext-realworld`                                                                                     |
+| Production branch                           | `main`                                                                                                                          |
+| Root directory                              | `apps/opennext`                                                                                                                 |
+| Build command                               | `pnpm run build:worker`                                                                                                         |
+| Deploy command                              | `pnpm exec opennextjs-cloudflare deploy`                                                                                        |
+| Build watch paths(Include)                  | `apps/opennext/*`、`packages/*`、`package.json`、`pnpm-lock.yaml`、`pnpm-workspace.yaml`、`turbo.json`                          |
+| Builds for non-production branches(Preview) | 無効                                                                                                                            |
+| Build variables                             | 必須なし。`NODE_VERSION`(既定 24.22.1)と `PNPM_VERSION` は未設定のままにする(ルートの `engines` と `packageManager` に従います) |
+
+- **Build command と Deploy command を分ける理由**: `pnpm run deploy` は `build:worker` と `opennextjs-cloudflare deploy` をまとめて実行するスクリプトです。Workers Builds は Build command のあとに Deploy command を実行するので、同じコマンドを 2 回実行しないようにそれぞれに割り当てます。pnpm には組み込みの `pnpm deploy` コマンドがあるため、スクリプトは `pnpm run deploy` で呼びます。
+- **Cloudflare の認証情報はデプロイ時だけ必要です。** `build:worker` は資格情報なしで通ります(ビルド時の D1 は `lib/local-context.ts` のメモリ上の Miniflare で、リモートには触れません)。`opennextjs-cloudflare deploy` は Workers Builds が渡す API トークンを使い、`populateCache` で KV と D1(`revalidations` テーブル)に書き込みます。トークンに **Workers KV Storage: Edit** と **D1: Edit** の権限があることを確認してください(自動生成のトークンに足りなければ、権限を足したトークンを選び直します)。
+- **クリーンなチェックアウトで動きます。** Workers Builds は毎回新しい環境で依存関係をインストールするので、`apps/opennext/.cloudflare/`(`cf` のビルド出力)が残る心配はありません。ローカルで同じコマンドを試すときは、先に `.cloudflare/` を消してください。
+- Node.js は Workers Builds の既定(24.x)がルートの `engines`(`>=24`)を満たします。pnpm はルートの `packageManager`(`pnpm@12.15.0`)で解決されます。
+
 ## ローカル開発とテスト
 
 ```bash

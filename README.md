@@ -266,6 +266,10 @@ vinext implements `'use cache'` (including the `remote` and `private` variants),
 - ブラウザ側の `'use cache: private'`: リクエスト単位のキャッシュのみ
 - ストリーミング中の内容を包む `<ViewTransition>`: SSR エラーになるため、その箇所は通常の `<Suspense>` を使っている
 
+## Continuous deployment
+
+`apps/opennext` and `apps/vinext` deploy to production on every push to `main` through Cloudflare Workers Builds (Git integration), each as its own Worker with its own root directory, build command, deploy command and watch paths. D1 migrations stay manual. The exact dashboard settings are in the "Workers Builds（CD）" section of [`apps/opennext/README.md`](apps/opennext/README.md) and [`apps/vinext/README.md`](apps/vinext/README.md).
+
 ## Testing
 
 ```bash

@@ -38,6 +38,29 @@ PLAYWRIGHT_BASE_URL=https://realworld-vinext.wataru-chame-gon.workers.dev pnpm t
 
 どちらも `cf d1 create` と `cf kv namespaces create` で作成し、`cloudflare.config.ts` で宣言しています。リモートの D1 には、`@realworld/db` パッケージのスクリプト（`pnpm db:setup:remote`）でマイグレーションとシードを適用しました。Wrangler は使っていません。
 
+## Workers Builds（CD）
+
+`main` への push ごとに、Cloudflare の Workers Builds（Git 連携）で本番へ自動デプロイします。PR のチェックは GitHub Actions、D1 のマイグレーションは手動で、ここには含みません。リポジトリの接続は Cloudflare ダッシュボードで行います(下の設定は未適用です)。
+
+ダッシュボードの Worker `realworld-vinext` > **Settings > Build** に次のとおり設定します。
+
+| 設定                                        | 値                                                                                                   |
+| ------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| Git repository                              | `WataruNishimura/vinext-opennext-realworld`                                                          |
+| Production branch                           | `main`                                                                                               |
+| Root directory                              | `apps/vinext`                                                                                        |
+| Build command                               | `pnpm run build`(`cf build`)                                                                         |
+| Deploy command                              | `pnpm run deploy:ci`(`cf deploy --prebuilt --mode production`)                                       |
+| Build watch paths(Include)                  | `apps/vinext/*`、`packages/*`、`package.json`、`pnpm-lock.yaml`、`pnpm-workspace.yaml`、`turbo.json` |
+| Builds for non-production branches(Preview) | 無効                                                                                                 |
+| Build variables                             | `CF_SEND_TELEMETRY=false`(任意)。`CLOUDFLARE_ACCOUNT_ID` はデプロイ時にアカウントを選べない場合だけ  |
+
+- **`cf` は devDependency です。** ビルドイメージに `cf` が入っているかは公式ドキュメントに記載がありません。`pnpm install` が `cf` を入れるので、`pnpm run …` 経由なら影響しません。
+- **Build と Deploy を分けます。** `cf build` が `.cloudflare/output` を作り、`cf deploy --prebuilt --mode production` がそれをアップロードします。`--prebuilt` なので 2 回ビルドしません。`cf build` は資格情報なしで通ります(ローカルで確認済み)。`cf deploy --prebuilt --mode production --dry-run` も資格情報なしで通ります。
+- **認証**: `cf` は `CLOUDFLARE_API_TOKEN`(と任意で `CLOUDFLARE_ACCOUNT_ID`)を読みます。Workers Builds がデプロイ時にこのトークンを環境変数として渡すかは公式ドキュメントに記載がなく、未確認です。初回のビルドログで認証エラーが出たら、Build variables に API トークンを **Secret** として `CLOUDFLARE_API_TOKEN` 名で追加してください(**Workers Scripts: Edit** が必要です)。
+- **Wrangler 構成ファイルがありません。** この Worker は `cloudflare.config.ts` で宣言していて、`cf` は Wrangler の構成を読みません。Worker 名(`realworld-vinext`)をダッシュボードの Worker と一致させてください。Workers Builds が `wrangler.jsonc` を求めて失敗した場合の代替は、`vite build` と `wrangler deploy` の組み合わせです。ただし `wrangler.jsonc` を別に持つことになり、バインディングの ID が `cloudflare.config.ts` と二重管理になります。まず上の構成を試し、失敗したときだけ切り替えてください。
+- Node.js は Workers Builds の既定(24.x)がルートの `engines`(`>=24`)を満たします。pnpm はルートの `packageManager`(`pnpm@12.15.0`)で解決されます。
+
 ## 設定のポイント
 
 - **D1**: `lib/database.ts` で、`cloudflare:workers` の `env` を使って `configureDatabase(() => env.DB)` を呼んでいます。ルートレイアウトがこのファイルを import します。
