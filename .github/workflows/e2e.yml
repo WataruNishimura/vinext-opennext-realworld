@@ -1,0 +1,78 @@
+name: E2E
+
+# Playwright e2e for each Cloudflare app and the cross-app VRT, all against LOCAL production
+# builds served in workerd with seeded local D1/KV state. No Cloudflare account, token or remote
+# resource is used: `cf build`, `cf d1 migrations apply --local`, `wrangler d1 migrations apply
+# --local`, `wrangler dev` and `vite preview` all run without authentication.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  WRANGLER_SEND_METRICS: 'false'
+  # Keep the CI `github` reporter and also write an HTML report to upload on failure.
+  PLAYWRIGHT_HTML_OPEN: never
+
+jobs:
+  e2e:
+    name: e2e (${{ matrix.app }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [opennext, vinext]
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: ./.github/actions/setup
+        with:
+          playwright: 'true'
+
+      # opennext: e2e build (testing API on), then migrations, seed and populateCache into .wrangler/state.
+      # vinext needs no step here: its Playwright webServer runs `pnpm build && pnpm db:setup:local`.
+      - name: Build and seed local state
+        if: matrix.app == 'opennext'
+        run: pnpm --filter @realworld/opennext e2e:prepare
+
+      - name: Playwright
+        run: pnpm --filter @realworld/${{ matrix.app }} test:e2e --reporter=github,html
+
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: playwright-report-${{ matrix.app }}
+          path: |
+            apps/${{ matrix.app }}/playwright-report/
+            apps/${{ matrix.app }}/test-results/
+          retention-days: 14
+
+  vrt:
+    name: VRT (opennext vs vinext)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: ./.github/actions/setup
+        with:
+          playwright: 'true'
+
+      - name: Build both apps, seed local D1, capture and compare
+        run: pnpm vrt
+
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: vrt-report
+          path: tools/vrt/report/
+          retention-days: 14
