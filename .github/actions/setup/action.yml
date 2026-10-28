@@ -1,0 +1,45 @@
+name: Setup
+description: Node.js 24, pnpm (from packageManager) with a cached store, and `pnpm install`. Optionally Playwright's Chromium.
+
+inputs:
+  playwright:
+    description: Install Playwright's Chromium (cached by Playwright version).
+    default: 'false'
+
+runs:
+  using: composite
+  steps:
+    - uses: pnpm/action-setup@v6
+
+    - uses: actions/setup-node@v7
+      with:
+        node-version: 24
+        cache: pnpm
+
+    - name: Install dependencies
+      shell: bash
+      run: pnpm install --frozen-lockfile
+
+    - name: Resolve Playwright version
+      if: inputs.playwright == 'true'
+      id: playwright
+      shell: bash
+      run: echo "version=$(pnpm --filter @realworld/vrt exec playwright --version | awk '{print $2}')" >> "$GITHUB_OUTPUT"
+
+    - name: Cache Playwright browsers
+      if: inputs.playwright == 'true'
+      id: playwright-cache
+      uses: actions/cache@v6
+      with:
+        path: ~/.cache/ms-playwright
+        key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}
+
+    - name: Install Playwright Chromium
+      if: inputs.playwright == 'true' && steps.playwright-cache.outputs.cache-hit != 'true'
+      shell: bash
+      run: pnpm --filter @realworld/vrt exec playwright install --with-deps chromium
+
+    - name: Install Playwright system dependencies
+      if: inputs.playwright == 'true' && steps.playwright-cache.outputs.cache-hit == 'true'
+      shell: bash
+      run: pnpm --filter @realworld/vrt exec playwright install-deps chromium
