@@ -15,7 +15,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <head>
         <meta name="color-scheme" content="light dark" />
       </head>
-      <body className="bg-surface text-ink min-h-dvh antialiased">{children}</body>
+      <body className="min-h-dvh antialiased">{children}</body>
     </html>
   );
 }

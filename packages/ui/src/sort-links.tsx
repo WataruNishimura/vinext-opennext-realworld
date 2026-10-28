@@ -1,7 +1,6 @@
 import { PRODUCT_SORTS, type ProductSearch, type ProductSort } from '@realworld/core';
-import { cn } from '@realworld/ui/cn';
-import { Link } from '@realworld/ui/link';
-import { catalogHref } from '../../../lib/routing.ts';
+import { cn } from './cn.ts';
+import { Link } from './link.tsx';
 
 const LABELS: Record<ProductSort, string> = {
   'name-asc': 'Name A–Z',
@@ -10,16 +9,25 @@ const LABELS: Record<ProductSort, string> = {
   'price-desc': 'Price: high to low',
 };
 
-export function SortLinks({ search }: { search: ProductSearch }) {
+/** Every sort order as a link, so each one is a cacheable, prefetchable URL. */
+export function SortLinks({
+  search,
+  hrefFor,
+}: {
+  search: ProductSearch;
+  hrefFor: (sort: ProductSort) => string;
+}) {
   return (
     <nav aria-label="Sort products" className="flex flex-wrap gap-2 text-sm">
       {PRODUCT_SORTS.map(sort => (
         <Link
           key={sort}
-          href={catalogHref(search, { sort, page: 1 })}
+          href={hrefFor(sort)}
+          prefetch
+          scroll={false}
           aria-current={sort === search.sort ? 'true' : undefined}
           className={cn(
-            'border-line rounded-full border px-3 py-1',
+            'border-line rounded-full border px-3 py-1 transition-colors',
             sort === search.sort ? 'bg-ink text-surface' : 'hover:bg-line/50',
           )}
         >

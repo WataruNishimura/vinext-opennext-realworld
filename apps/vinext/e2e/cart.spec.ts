@@ -35,11 +35,11 @@ test('adding to and removing from the cart updates the cached cart', async ({ pa
   await expect(page.getByRole('link', { name: 'Cart with 0 items' })).toBeVisible();
 
   await page.getByRole('button', { exact: true, name: 'Add to cart' }).click();
-  await expect(page.getByRole('button', { exact: true, name: 'Remove from cart' })).toBeVisible();
+  await expect(page.getByText('1 in your cart')).toBeVisible();
   await expect(page.getByRole('link', { name: 'Cart with 1 item' })).toBeVisible();
 
   await page.reload();
-  await expect(page.getByRole('button', { exact: true, name: 'Remove from cart' })).toBeVisible();
+  await expect(page.getByText('1 in your cart')).toBeVisible();
   await expect(page.getByRole('link', { name: 'Cart with 1 item' })).toBeVisible();
 
   await page.getByRole('link', { name: 'Cart with 1 item' }).click();
@@ -63,4 +63,11 @@ test('the empty cart links back to the catalog', async ({ page }) => {
   await page.waitForURL('/cart');
   await expect(page.getByText('Your cart is empty.')).toBeVisible();
   await expect(page.getByRole('link', { exact: true, name: 'Browse products' })).toBeVisible();
+});
+
+test('a sold-out product cannot be added to the cart', async ({ page }) => {
+  await page.goto('/product/7');
+  await expect(page.getByRole('button', { exact: true, name: 'Sold out' })).toBeDisabled();
+  await expect(page.getByRole('button', { exact: true, name: 'Add to cart' })).toHaveCount(0);
+  await expect(page.getByTestId('live-stock')).toHaveText('Out of stock');
 });

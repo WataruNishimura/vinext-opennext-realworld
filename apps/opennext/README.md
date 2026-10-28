@@ -15,7 +15,7 @@ RealWorld コマースデモを **Next.js 16.5 canary**(App Router、Cache Compo
 | ルート          | 内容                                                                               | レンダリング                              |
 | --------------- | ---------------------------------------------------------------------------------- | ----------------------------------------- |
 | `/`             | ヒーロー、注目商品、カテゴリ(件数付き)、サインイン時のおすすめ                     | Partial Prerender、`instant = true`       |
-| `/all`          | カタログ: 入力中検索、並び替え、カテゴリ絞り込み、ページング、在庫バッジ           | Partial Prerender、`instant = true`       |
+| `/all`          | カタログ: 検索フォーム(GET)、並び替え、カテゴリ絞り込み、ページング、在庫バッジ    | Partial Prerender、`instant = true`       |
 | `/product/[id]` | 商品ヘッダーと評価、リアルタイム在庫、カート追加、保存、注目商品への設定、レビュー | Partial Prerender、`instant = true`       |
 | `/cart`         | カート明細(楽観的更新の数量ステッパー、削除)                                       | Partial Prerender、`instant = true`       |
 | `/saved`        | 保存した商品(楽観的な保存解除)とおすすめ                                           | Partial Prerender、`instant = true`       |

@@ -1,10 +1,11 @@
 import { prefetch } from '@realworld/core/render-stages';
+import { toggleSaveProduct } from '@realworld/core/user/user-actions';
 import { getCurrentAccount, getSavedProducts } from '@realworld/core/user/user-queries';
 import { buttonClasses } from '@realworld/ui/button';
 import { Card } from '@realworld/ui/card';
 import { Link } from '@realworld/ui/link';
 import { ProductCard, ProductGrid, ProductGridSkeleton } from '@realworld/ui/product-card';
-import { SaveProductButton } from './save-product-button.tsx';
+import { SaveProductButton } from '@realworld/ui/save-product-button';
 
 /** Saved products: `'use cache'` per account (`saved:<accountId>`), after `prefetch()`. */
 export async function SavedProducts() {
@@ -35,7 +36,13 @@ export async function SavedProducts() {
     <ProductGrid>
       {products.map(product => (
         <ProductCard key={product.id} product={product} href={`/product/${product.id}`} prefetch>
-          <SaveProductButton productId={product.id} saved variant="ghost" />
+          <SaveProductButton
+            productId={product.id}
+            saved
+            label={product.name}
+            variant="ghost"
+            action={toggleSaveProduct}
+          />
         </ProductCard>
       ))}
     </ProductGrid>

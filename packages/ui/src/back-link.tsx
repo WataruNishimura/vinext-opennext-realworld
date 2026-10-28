@@ -1,13 +1,13 @@
 'use client';
 
-import { Link } from '@realworld/ui/link';
-import { useRouter } from 'next/navigation';
 import type { ReactNode } from 'react';
+import { Link } from './link.tsx';
 
 /**
  * Returns to the previous page of this app. A plain link to `fallbackHref` without JavaScript, or
  * when there is no earlier in-app entry (the page was opened directly): the Navigation API's
- * `canGoBack` only counts same-origin entries, so Back never leaves the site.
+ * `canGoBack` only counts same-origin entries, so Back never leaves the site. Going back through
+ * the History API lets the app router restore the previous route.
  */
 export function BackLink({
   fallbackHref,
@@ -18,7 +18,6 @@ export function BackLink({
   className?: string;
   children: ReactNode;
 }) {
-  const router = useRouter();
   return (
     <Link
       href={fallbackHref}
@@ -26,7 +25,7 @@ export function BackLink({
       onClick={event => {
         if (!('navigation' in window) || !window.navigation.canGoBack) return;
         event.preventDefault();
-        router.back();
+        window.history.back();
       }}
     >
       {children}

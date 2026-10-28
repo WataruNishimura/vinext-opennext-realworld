@@ -15,6 +15,7 @@
     "test": "turbo run test",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "vrt": "pnpm --filter @realworld/vrt vrt",
     "db:generate": "pnpm --filter @realworld/db db:generate",
     "db:migrate:local": "pnpm --filter @realworld/db db:migrate:local",
     "db:seed:local": "pnpm --filter @realworld/db db:seed:local"

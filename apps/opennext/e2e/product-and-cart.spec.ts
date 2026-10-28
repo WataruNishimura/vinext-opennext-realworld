@@ -80,3 +80,10 @@ test('an empty cart is ready instantly from the home page', async ({ page }) => 
   );
   await expect(page.getByText('Your cart is empty.').first()).toBeVisible();
 });
+
+test('a sold-out product cannot be added to the cart', async ({ page }) => {
+  await page.goto('/product/7');
+  await expect(page.getByRole('button', { name: 'Sold out' })).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Add to cart' })).toHaveCount(0);
+  await expect(page.getByTestId('live-stock')).toHaveText('Out of stock');
+});

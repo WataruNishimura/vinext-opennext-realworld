@@ -21,6 +21,8 @@ packages/
   db/                Drizzle schema, migrations, seed, D1 client, Miniflare test database
   core/              Data layer: queries by caching tier, Server Functions, tags, session
   ui/                Shared React components (Tailwind CSS v4, Ariakit, View Transitions)
+tools/
+  vrt/               Cross-app visual regression test: opennext vs vinext, pixel by pixel
 ```
 
 ```
@@ -147,6 +149,14 @@ Each domain is split into a framework-free data layer (`*-data.ts`, tested again
 
 Shared components, one per kebab-case file, imported as `@realworld/ui/<file>`: `button`, `card`, `skeleton`, `price`, `star-rating`, `stock-badge`, `product-image`, `product-card` (`ProductCard`, `ProductGrid`, `ProductGridSkeleton`), `pagination`, `animated-suspense`, and the client leaves `quantity-stepper` (`useOptimistic` action prop), `modal` (native `<dialog>`) and `dropdown-menu` (Ariakit menu). Components are pure and free of manual memoization, so the React Compiler can optimize them. Skeletons sit next to their components and match their size.
 
+Both apps render the same store UI from this package, so they look identical (checked by `pnpm vrt`, below):
+
+- Chrome: `store-shell` (`StoreShell` with per-session `account` and `cart` slots, `MarketingShell`), `site-header`, `site-footer` (names the runtime), `cart-link` (`CartIconLink`).
+- Catalog: `catalog-layout`, `category-nav`, `product-search-form` (a plain GET form), `sort-links`, `product-results`.
+- Product page: `product-page-layout` (slots the app fills, each inside the app's own `<Suspense>` or `<AnimatedSuspense>`), `product-header`, `product-details`, `live-stock`, `review-list`, `save-product` (`SignInToSaveLink`), and the client leaves `back-link` (History API back within the app), `add-to-cart-button` and `save-product-button`. The buttons take the Server Function as an action prop (`action={addToCart}`), like `quantity-stepper`.
+
+Apps keep only thin feature components: they await the render-stage gates, call the queries and pass the data to these views.
+
 Design tokens use `light-dark()` with `color-scheme: light dark`. Apps load them after Tailwind:
 
 ```css
@@ -265,3 +275,14 @@ pnpm test
 - **`@realworld/db`**: migrations apply to a fresh Miniflare D1 database; the seed is deterministic, idempotent, and its SQL form recreates the same data. The D1 REST adapter runs against the same Miniflare database through an emulated `/raw` endpoint and must return exactly what the Workers binding returns (rows, meta, batches, errors, parameter binding, Drizzle joins).
 - **`@realworld/core`**: every data function runs against a seeded Miniflare D1 database. Queries and Server Functions run with in-memory stand-ins for `next/cache`, `next/headers` and `next/navigation`, and the tests assert each query's tags and lifetime, each query's cache directive (read from source, matching the table above), and the exact tags each Server Function updates.
 - **`@realworld/ui`**: components render under happy-dom with Testing Library.
+
+### Cross-app visual regression (`tools/vrt`)
+
+```bash
+pnpm vrt                     # build both apps, seed their local D1, serve, capture, compare
+pnpm vrt --skip-build        # reuse the existing builds
+pnpm vrt --only product-7    # only targets whose id contains the text
+pnpm vrt --opennext-url http://localhost:8799 --vinext-url http://localhost:4173  # running servers
+```
+
+Builds `apps/opennext` (served by `wrangler dev` on port 8790) and `apps/vinext` (`vite preview` on 4174) against their seeded **local** D1 state; nothing remote is created or deployed. Each route in `tools/vrt/src/config.ts` (`ROUTES`) is captured at desktop (1280×800) and mobile (390×844) as a full-page screenshot once every streamed Suspense boundary is revealed and fonts are loaded, with animations, transitions and View Transitions disabled. Request-time values (`[data-testid="live-stock"]`) and the runtime name in the footer are masked. The two screenshots are compared with pixelmatch; a target fails above 0.1% differing pixels. The report (`tools/vrt/report/index.html`, side by side with diff images) is gitignored. Add a route by adding one line to `ROUTES`.

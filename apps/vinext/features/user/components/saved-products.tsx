@@ -1,9 +1,10 @@
 import { getCurrentAccount, getSavedProducts } from '@realworld/core/user/user-queries';
 import { prefetch } from '@realworld/core/render-stages';
+import { toggleSaveProduct } from '@realworld/core/user/user-actions';
 import { buttonClasses } from '@realworld/ui/button';
 import { Link } from '@realworld/ui/link';
 import { ProductCard, ProductGrid } from '@realworld/ui/product-card';
-import { SaveProductButton } from './save-product-button.tsx';
+import { SaveProductButton } from '@realworld/ui/save-product-button';
 
 export async function SavedProducts() {
   await prefetch();
@@ -33,7 +34,13 @@ export async function SavedProducts() {
     <ProductGrid>
       {products.map(product => (
         <ProductCard key={product.id} product={product} href={`/product/${product.id}`} prefetch>
-          <SaveProductButton productId={product.id} saved label={product.name} />
+          <SaveProductButton
+            productId={product.id}
+            saved
+            label={product.name}
+            variant="ghost"
+            action={toggleSaveProduct}
+          />
         </ProductCard>
       ))}
     </ProductGrid>

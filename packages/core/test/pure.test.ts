@@ -5,6 +5,7 @@ import { categoryTags } from '../src/category/category-cache.ts';
 import { formatPrice } from '../src/money.ts';
 import { productTags } from '../src/product/product-cache.ts';
 import {
+  catalogHref,
   normalizeProductSearch,
   PRODUCT_PAGE_SIZE,
   productSearchParams,
@@ -108,6 +109,24 @@ describe('productSearchParams', () => {
     });
     expect(productSearchParams(search)).toBe('q=lamp&sort=price-asc&category=home&page=2');
     expect(productSearchParams(search, { page: 1 })).toBe('q=lamp&sort=price-asc&category=home');
+  });
+});
+
+describe('catalogHref', () => {
+  const search = normalizeProductSearch({ q: 'Lamp', sort: 'price-asc', page: '3' });
+
+  it('links to the bare catalog for the default search', () => {
+    expect(catalogHref(normalizeProductSearch({}))).toBe('/all');
+  });
+
+  it('keeps the current search and applies overrides', () => {
+    expect(catalogHref(search, { page: 4 })).toBe('/all?q=lamp&sort=price-asc&page=4');
+  });
+
+  it('resets to the first page when the category changes', () => {
+    expect(catalogHref(search, { category: 'audio', page: 1 })).toBe(
+      '/all?q=lamp&sort=price-asc&category=audio',
+    );
   });
 });
 
