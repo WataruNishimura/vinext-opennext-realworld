@@ -12,7 +12,7 @@ pnpm build      # next build（Cache Components の静的シェルをビルド�
 pnpm start      # next start
 pnpm test       # Vitest（アプリのヘルパー）
 pnpm test:e2e   # 本番ビルド（next build && next start, ポート 3100）に対して Playwright を実行
-PLAYWRIGHT_BASE_URL=https://<デプロイ先> pnpm test:e2e
+PLAYWRIGHT_BASE_URL=https://realworld-commerce-next.n13u.dev pnpm test:e2e
 PLAYWRIGHT_BASE_URL=https://<Preview の URL> VERCEL_AUTOMATION_BYPASS_SECRET=<シークレット> pnpm test:e2e
 ```
 
@@ -38,7 +38,7 @@ Vercel の Preview は Vercel Authentication で保護されています。`VERC
 
 ### Vercel の設定
 
-Vercel プロジェクト `realworld-next` で Preview にデプロイし、e2e がすべて通ることを確認済みです（Production にはまだデプロイしていません）。
+Vercel プロジェクト `realworld-commerce-next` にデプロイしています。本番は <https://realworld-commerce-next.n13u.dev/> で、Preview と本番の両方で e2e がすべて通ることを確認済みです。
 
 1. リポジトリを Vercel にインポートし、**Root Directory** を `apps/next` にします。Framework Preset は Next.js が自動で選ばれ、ルートの `packageManager` から pnpm が使われます。`packages/*` を読むため、「Include files outside of the Root Directory in the Build Step」は有効のままにします。
 2. **Node.js Version** を 24.x にします（ルートの `engines` が `>=24`）。
