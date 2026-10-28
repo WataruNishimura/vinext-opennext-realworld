@@ -32,6 +32,10 @@ jobs:
           restore-keys: turbo-${{ runner.os }}-
 
       - run: pnpm format:check
+      # vinext's ESLint resolves `cloudflare:workers` env types from the gitignored
+      # .cloudflare/types, which `cf workers types` writes (offline, no Cloudflare login).
+      - name: Generate vinext Worker types
+        run: pnpm --filter @realworld/vinext types
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm test
