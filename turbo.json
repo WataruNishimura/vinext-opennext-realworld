@@ -12,6 +12,16 @@
         "dist/**"
       ]
     },
+    "@realworld/next#build": {
+      "dependsOn": ["^build"],
+      "env": [
+        "CLOUDFLARE_ACCOUNT_ID",
+        "CLOUDFLARE_D1_DATABASE_ID",
+        "CLOUDFLARE_D1_API_TOKEN",
+        "CLOUDFLARE_API_BASE_URL"
+      ],
+      "outputs": [".next/**", "!.next/cache/**"]
+    },
     "lint": {},
     "typecheck": {},
     "test": {

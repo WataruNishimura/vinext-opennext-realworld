@@ -17,3 +17,4 @@ test-results/
 .cloudflare/
 .vinext/
 next-env.d.ts
+.vercel

@@ -13,7 +13,10 @@ pnpm start      # next start
 pnpm test       # Vitest（アプリのヘルパー）
 pnpm test:e2e   # 本番ビルド（next build && next start, ポート 3100）に対して Playwright を実行
 PLAYWRIGHT_BASE_URL=https://<デプロイ先> pnpm test:e2e
+PLAYWRIGHT_BASE_URL=https://<Preview の URL> VERCEL_AUTOMATION_BYPASS_SECRET=<シークレット> pnpm test:e2e
 ```
+
+Vercel の Preview は Vercel Authentication で保護されています。`VERCEL_AUTOMATION_BYPASS_SECRET` に「Protection Bypass for Automation」のシークレット（Vercel の Deployment Protection 設定、または `vercel project protection`）を渡すと、Playwright が `x-vercel-protection-bypass` ヘッダーを付けてアクセスします。
 
 `dev` / `build` / `start` は `scripts/with-d1.ts` を通して実行します。
 
@@ -35,12 +38,14 @@ PLAYWRIGHT_BASE_URL=https://<デプロイ先> pnpm test:e2e
 
 ### Vercel の設定
 
-まだデプロイしていません。以下は手順のメモです。
+Vercel プロジェクト `realworld-next` で Preview にデプロイし、e2e がすべて通ることを確認済みです（Production にはまだデプロイしていません）。
 
 1. リポジトリを Vercel にインポートし、**Root Directory** を `apps/next` にします。Framework Preset は Next.js が自動で選ばれ、ルートの `packageManager` から pnpm が使われます。`packages/*` を読むため、「Include files outside of the Root Directory in the Build Step」は有効のままにします。
 2. **Node.js Version** を 24.x にします（ルートの `engines` が `>=24`）。
 3. Cloudflare ダッシュボードの「API Tokens」で、対象アカウントの **D1: Edit** 権限だけを持つカスタムトークンを作ります。
 4. Vercel の **Environment Variables** に `CLOUDFLARE_ACCOUNT_ID`、`CLOUDFLARE_D1_DATABASE_ID`、`CLOUDFLARE_D1_API_TOKEN`（Sensitive）を、Production と Preview の両方に設定します。`next build` が静的シェルを D1 から描画するので、ビルド時にも必要です。足りない場合はビルドが `MissingD1EnvError` で失敗します（Vercel 上ではローカルのエミュレーターは起動しません）。
+5. ビルドは Turborepo（`turbo run build`）で実行され、strict モードでは `turbo.json` に書かれていない環境変数がタスクに渡りません。ルートの `turbo.json` の `@realworld/next#build` に `CLOUDFLARE_*` を列挙しています。
+6. CLI から `vercel deploy` するときは、ルートの `.vercelignore` で `node_modules`、ビルド結果、`.env*` などをアップロードから外しています。
 
 ## 設定のポイント
 
@@ -76,5 +81,5 @@ PLAYWRIGHT_BASE_URL=https://<デプロイ先> pnpm test:e2e
 
 - クエリ 1 回（`batch()` は 1 回にまとまる）ごとに `api.cloudflare.com` への HTTPS リクエストが発生します。Vercel のリージョンと D1 のリージョンの距離がそのまま遅延になるので、キャッシュの階層（ルートの README の表）がそのぶん効きます。
 - Cloudflare API のレート制限の対象になります。
-- API リファレンスでは `params` は文字列の配列と書かれていますが、アダプターは D1 バインディングと同じく数値と `null` をそのまま JSON で送ります（真偽値は 1 / 0）。drizzle-kit の `d1-http` ドライバーも同じ送り方です。ローカルのエミュレーターとバインディングの比較テスト（`packages/db/test/d1-http.test.ts`）では一致を確認していますが、本物の API ではまだ確認していません。
+- API リファレンスでは `params` は文字列の配列と書かれていますが、アダプターは D1 バインディングと同じく数値と `null` をそのまま JSON で送ります（真偽値は 1 / 0）。drizzle-kit の `d1-http` ドライバーも同じ送り方です。ローカルのエミュレーターとバインディングの比較テスト（`packages/db/test/d1-http.test.ts`）で一致を確認し、Vercel の Preview（本物の API）でも読み書きを含む e2e がすべて通りました。
 - REST API にはリードレプリカのセッションがないので、`withSession()` はブックマークを持たず（`getBookmark()` は `null`）、すべてプライマリに送ります。`dump()` は使えません。
