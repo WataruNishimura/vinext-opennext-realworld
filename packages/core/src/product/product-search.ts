@@ -56,3 +56,9 @@ export function productSearchParams(
   if (next.page > 1) params.set('page', String(next.page));
   return params.toString();
 }
+
+/** The catalog URL for a search, leaving out defaults so equal searches share one URL. */
+export function catalogHref(search: ProductSearch, overrides: Partial<ProductSearch> = {}): string {
+  const query = productSearchParams(search, overrides);
+  return query ? `/all?${query}` : '/all';
+}

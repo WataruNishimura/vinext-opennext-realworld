@@ -12,6 +12,7 @@ export type { Category, CategoryWithCount } from './category/types/category.ts';
 export { formatPrice } from './money.ts';
 export { productTags } from './product/product-cache.ts';
 export {
+  catalogHref,
   normalizeProductSearch,
   PRODUCT_PAGE_SIZE,
   PRODUCT_SORTS,
