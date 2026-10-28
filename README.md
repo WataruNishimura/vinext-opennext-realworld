@@ -1,9 +1,10 @@
 # vinext × OpenNext RealWorld
 
-One commerce demo, two Cloudflare Workers deployments. The same shared packages are rendered by:
+One commerce demo, several deployments over one Cloudflare D1 database. The same shared packages are rendered by:
 
 - **`apps/opennext`**: Next.js 16.5 canary on Workers through [`@opennextjs/cloudflare`](https://opennext.js.org/cloudflare)
 - **`apps/vinext`**: Cloudflare's [vinext](https://github.com/cloudflare/vinext) (the Next.js API surface on Vite)
+- **`apps/next`**: plain Next.js 16.5 canary for Vercel, reading D1 over the D1 REST API
 
 The product is modeled on [next16-commerce](https://github.com/aurorascharff/next16-commerce), with the caching ideas of [next16-airline](https://github.com/aurorascharff/next16-airline) (one caching tier per read) and [next16-mail](https://github.com/aurorascharff/next16-mail) (account-scoped cached queries, a private session, heavy bodies kept out of prefetches). It aims to exercise Cache Components as fully as possible: `'use cache'`, `'use cache: private'`, `'use cache: remote'`, `cacheLife`, `cacheTag`, `updateTag` in Server Functions, Partial Prefetching, `ensureStatic`, and the `prefetch()` / `navigation()` render-stage gates.
 
@@ -13,6 +14,7 @@ The code follows the [Next.js App Architecture](https://github.com/aurorascharff
 
 ```
 apps/
+  next/              Next.js on Vercel (D1 over the REST API)
   opennext/          Next.js + @opennextjs/cloudflare  (added later)
   vinext/            vinext on Cloudflare Workers
 packages/
@@ -108,12 +110,13 @@ Cart changes check the live stock (uncached) and never invalidate the catalog. F
 
 ### `@realworld/db`
 
-| Export                     | What it is                                                                                 |
-| -------------------------- | ------------------------------------------------------------------------------------------ |
-| `@realworld/db`            | `createDb(binding)`, `schema`, row types, `Database`, `D1Binding`                          |
-| `@realworld/db/seed`       | `buildSeedData()`, `seed(db)`, `seedStatements()`, `DEMO_ACCOUNT_ID`, `DEMO_ACCOUNT_EMAIL` |
-| `@realworld/db/migrations` | `migrationsDir`, `readMigrations()`                                                        |
-| `@realworld/db/testing`    | `createTestDatabase()`: an isolated, migrated D1 database in Miniflare                     |
+| Export                     | What it is                                                                                                                |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `@realworld/db`            | `createDb(binding)`, `schema`, row types, `Database`, `D1Binding`                                                         |
+| `@realworld/db/seed`       | `buildSeedData()`, `seed(db)`, `seedStatements()`, `DEMO_ACCOUNT_ID`, `DEMO_ACCOUNT_EMAIL`                                |
+| `@realworld/db/migrations` | `migrationsDir`, `readMigrations()`                                                                                       |
+| `@realworld/db/d1-http`    | `createD1HttpBinding()`: a `D1Database` over the Cloudflare D1 REST API (no binding needed)                               |
+| `@realworld/db/testing`    | `createTestDatabase()`: an isolated, migrated D1 database in Miniflare, also served over the emulated D1 REST API (`api`) |
 
 Tables: `categories`, `products` (with the `featured` flag), `inventory`, `accounts`, `reviews`, `cart_items` (keyed by an opaque cart id cookie), `saved_products`. Money is stored in cents, timestamps as integer milliseconds. The seed is deterministic (seeded PRNG, fixed timestamps): 7 categories, 28 products (4 featured, some sold out, some low in stock), 2 accounts and generated reviews.
 
@@ -192,7 +195,22 @@ configureDatabase(() => env.DB);
 
 The resolver runs on every `getDb()` call; the Drizzle client is memoized per binding object, so this is cheap. Until an app configures it, `getDb()` throws a `DatabaseNotConfiguredError` that points back here.
 
-### Next.js (`apps/opennext`)
+Runtimes without a D1 binding (Vercel, `apps/next`) register an adapter over the [D1 REST API](https://developers.cloudflare.com/api/resources/d1/subresources/database/methods/raw/) instead. It implements the same `D1Database` interface, so `@realworld/core` and Drizzle do not change:
+
+```ts
+// apps/next/lib/database.ts
+import { configureDatabase } from '@realworld/core/database';
+import type { D1Binding } from '@realworld/db';
+import { createD1HttpBinding } from '@realworld/db/d1-http';
+import { d1HttpOptionsFromEnv } from './d1-env.ts';
+
+let binding: D1Binding | undefined;
+configureDatabase(() => (binding ??= createD1HttpBinding(d1HttpOptionsFromEnv(process.env))));
+```
+
+`CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_D1_DATABASE_ID` and `CLOUDFLARE_D1_API_TOKEN` are server-only. Locally, without a token, `apps/next` runs against a seeded Miniflare D1 behind an emulated REST API. See [`apps/next/README.md`](apps/next/README.md) for Vercel setup and every difference from `apps/vinext`.
+
+### Next.js (`apps/opennext`, `apps/next`)
 
 ```ts
 // next.config.ts
@@ -244,6 +262,6 @@ vinext implements `'use cache'` (including the `remote` and `private` variants),
 pnpm test
 ```
 
-- **`@realworld/db`**: migrations apply to a fresh Miniflare D1 database; the seed is deterministic, idempotent, and its SQL form recreates the same data.
+- **`@realworld/db`**: migrations apply to a fresh Miniflare D1 database; the seed is deterministic, idempotent, and its SQL form recreates the same data. The D1 REST adapter runs against the same Miniflare database through an emulated `/raw` endpoint and must return exactly what the Workers binding returns (rows, meta, batches, errors, parameter binding, Drizzle joins).
 - **`@realworld/core`**: every data function runs against a seeded Miniflare D1 database. Queries and Server Functions run with in-memory stand-ins for `next/cache`, `next/headers` and `next/navigation`, and the tests assert each query's tags and lifetime, each query's cache directive (read from source, matching the table above), and the exact tags each Server Function updates.
 - **`@realworld/ui`**: components render under happy-dom with Testing Library.

@@ -41,6 +41,7 @@ catalog:
   # Pinned to the version @opennextjs/cloudflare depends on (lib/remote-cache-handler.ts).
   '@opennextjs/aws': 4.1.12
   wrangler: ^4.153.0
+  # Next.js apps (apps/opennext, apps/next): reactCompiler runs through the Babel plugin.
   '@tailwindcss/postcss': ^4.3.3
   babel-plugin-react-compiler: ^1.0.0
   # UI

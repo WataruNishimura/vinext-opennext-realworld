@@ -1,0 +1,20 @@
+# The Vercel CLI uploads the repository root (apps/next reads packages/*); keep local state out.
+node_modules/
+.pnpm-store/
+.turbo/
+.next/
+.open-next/
+dist/
+.wrangler/
+.dev.vars
+.env*
+!.env.example
+*.log
+.DS_Store
+coverage/
+playwright-report/
+test-results/
+.claude/
+.cloudflare/
+.vinext/
+next-env.d.ts

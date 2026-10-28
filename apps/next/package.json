@@ -1,0 +1,37 @@
+{
+  "name": "@realworld/next",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node scripts/with-d1.ts next dev",
+    "build": "node scripts/with-d1.ts next build",
+    "start": "node scripts/with-d1.ts next start",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:e2e": "playwright test"
+  },
+  "dependencies": {
+    "@realworld/core": "workspace:*",
+    "@realworld/db": "workspace:*",
+    "@realworld/ui": "workspace:*",
+    "next": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "server-only": "catalog:"
+  },
+  "devDependencies": {
+    "@next/playwright": "catalog:",
+    "@playwright/test": "catalog:",
+    "@tailwindcss/postcss": "catalog:",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "babel-plugin-react-compiler": "catalog:",
+    "tailwindcss": "catalog:",
+    "typescript": "catalog:",
+    "typescript-7": "catalog:",
+    "vitest": "catalog:"
+  }
+}
