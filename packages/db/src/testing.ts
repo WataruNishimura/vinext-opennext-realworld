@@ -1,3 +1,4 @@
+import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Miniflare } from 'miniflare';
 import { createDb, type D1Binding, type Database } from './client.ts';
@@ -26,6 +27,7 @@ export type TestDatabaseOptions = {
   host?: string;
 };
 
+const WORKER = fileURLToPath(new URL('d1-http-api.worker.js', import.meta.url));
 const ACCOUNT_ID = 'test-account';
 const API_TOKEN = 'test-token';
 
@@ -37,7 +39,9 @@ export async function createTestDatabase(options: TestDatabaseOptions = {}): Pro
   const databaseId = crypto.randomUUID();
   const miniflare = new Miniflare({
     modules: true,
-    scriptPath: fileURLToPath(new URL('d1-http-api.worker.js', import.meta.url)),
+    scriptPath: WORKER,
+    // Module paths are relative to this root, so the worker loads from any working directory.
+    modulesRoot: dirname(WORKER),
     d1Databases: { DB: databaseId },
     bindings: { ACCOUNT_ID, DATABASE_ID: databaseId, API_TOKEN },
     host: options.host ?? '127.0.0.1',
