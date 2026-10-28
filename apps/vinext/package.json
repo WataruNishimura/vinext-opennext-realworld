@@ -8,6 +8,7 @@
     "build": "cf build",
     "preview": "vite preview",
     "deploy": "cf deploy",
+    "deploy:ci": "cf deploy --prebuilt --mode production",
     "types": "cf workers types",
     "db:setup:local": "D1_DATABASE_ID=7c6d99ba-4407-484b-8fd8-4fb8dbf07bbc pnpm --filter @realworld/db db:migrate:local --persist-to ../../apps/vinext/.cloudflare/state && D1_DATABASE_ID=7c6d99ba-4407-484b-8fd8-4fb8dbf07bbc pnpm --filter @realworld/db db:seed:local --persist-to ../../apps/vinext/.cloudflare/state",
     "db:setup:remote": "D1_DATABASE_ID=7c6d99ba-4407-484b-8fd8-4fb8dbf07bbc pnpm --filter @realworld/db db:migrate:remote && D1_DATABASE_ID=7c6d99ba-4407-484b-8fd8-4fb8dbf07bbc pnpm --filter @realworld/db db:seed:remote",
