@@ -2,6 +2,8 @@
 
 `apps/vinext` と同じ RealWorld コマースデモを、素の Next.js 16.5 canary（Turbopack）で作り直したものです。Vercel へのデプロイを想定しています。ページ構成、`features/`、`lib/routing.ts`、e2e テストは `apps/vinext` からの移植で、違いは下の「`apps/vinext` との違い」にまとめています。
 
+**公開 URL:** https://realworld-commerce-next.n13u.dev （Vercel プロジェクト `realworld-commerce-next`）
+
 Vercel には D1 バインディングがないため、既存の Cloudflare D1 データベース（`apps/vinext` と同じもの）を **D1 の REST API** 経由で読み書きします。アダプターは `@realworld/db/d1-http` の `createD1HttpBinding()` で、`D1Database` と同じインターフェースを持つので、`@realworld/core` と Drizzle はそのまま動きます。
 
 ## コマンド
